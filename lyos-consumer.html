@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LYOS — Neonatal Platelet Secretome</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:     #f0f4f7;
+      --white:  #ffffff;
+      --deep:   #1e2d4a;
+      --mid:    #3d5a96;
+      --teal:   #4ecdc4;
+      --teal-d: #2a9e96;
+      --teal-l: #edfafa;
+      --cta:    #e8632a;
+      --tx:     #1a2236;
+      --t2:     #526070;
+      --t3:     #8a96a3;
+      --bd:     #dde5ec;
+      --e: cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--tx);
+      font-family: 'Outfit', system-ui, sans-serif;
+      line-height: 1.65;
+    }
+    a { text-decoration: none; color: inherit; }
+    button { font-family: inherit; cursor: pointer; border: none; }
+
+    /* Animate from visible — never gate content behind opacity:0 on load */
+    .anim { opacity: 0.85; transform: translateY(10px); transition: opacity 400ms var(--e), transform 400ms var(--e); }
+    .anim.on { opacity: 1; transform: none; }
+    .anim[data-d="1"] { transition-delay: 40ms; }
+    .anim[data-d="2"] { transition-delay: 80ms; }
+    .anim[data-d="3"] { transition-delay: 60ms; }
+    .anim[data-d="4"] { transition-delay: 80ms; }
+    /* Hero content never hidden — visible immediately on paint */
+    .hero .anim { opacity: 1; transform: none; }
+    .hero .anim.ready { opacity: 0.85; transform: translateY(10px); transition: opacity 400ms var(--e), transform 400ms var(--e); }
+    .hero .anim.ready.on { opacity: 1; transform: none; }
+    .hero .anim.ready[data-d="1"] { transition-delay: 80ms; }
+    .hero .anim.ready[data-d="2"] { transition-delay: 160ms; }
+    .hero .anim.ready[data-d="3"] { transition-delay: 240ms; }
+    .hero .anim.ready[data-d="4"] { transition-delay: 300ms; }
+    /* CTA section — always visible */
+    .cta-section .anim { opacity: 1; transform: none; }
+    .cta-section .anim.ready { opacity: 0.85; transform: translateY(10px); }
+    .cta-section .anim.ready.on { opacity: 1; transform: none; }
+
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+    /* ── NAV ── */
+    .nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 56px;
+      background: rgba(240,244,247,.88); backdrop-filter: blur(20px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .brand-logo { display: flex; align-items: center; gap: 10px; }
+    .brand-name { font-size: 17px; font-weight: 600; letter-spacing: .18em; color: var(--deep); }
+    .nav-links  { display: flex; gap: 2px; list-style: none; }
+    .nav-links a { font-size: 13px; font-weight: 500; color: var(--t2); padding: 9px 14px; border-radius: 8px; transition: color 160ms var(--e), background 160ms var(--e); position: relative; }
+    .nav-links a:hover { color: var(--tx); background: rgba(30,45,74,.06); }
+    .nav-links a.active { color: var(--cta); font-weight: 700; }
+    .nav-links a.active::after { content:''; position:absolute; bottom:4px; left:14px; right:14px; height:2px; background:var(--cta); border-radius:2px; }
+    .btn-nav { font-size: 13px; font-weight: 700; padding: 10px 22px; background: var(--cta); color: #fff; border-radius: 100px; transition: background 160ms var(--e), transform 140ms var(--e), box-shadow 180ms var(--e); }
+    .btn-nav:hover  { background: #d45522; transform: translateY(-1px); box-shadow: 0 6px 20px -6px rgba(232,99,42,.5); }
+    .btn-nav:active { transform: scale(.97); }
+
+    /* ── HERO ── */
+    .hero { display: grid; grid-template-columns: 1fr 1fr; min-height: 600px; }
+    .hero-l { padding: 96px 56px 80px 56px; display: flex; flex-direction: column; justify-content: center; }
+    .hero-r {
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 48px;
+      background: radial-gradient(ellipse at 50% 50%, #eef5f8 0%, #2a4060 55%, #162438 100%);
+      border-radius: 0 0 0 72px;
+      overflow: hidden;
+    }
+    .hero-vial-img {
+      width: 100%; max-width: 440px;
+      animation: float 6s ease-in-out infinite;
+      filter: drop-shadow(0 40px 80px rgba(0,0,0,.35)) drop-shadow(0 0 60px rgba(78,205,196,.18));
+    }
+    .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--teal-d); margin-bottom: 20px; display: flex; align-items: center; gap: 9px; }
+    .eyebrow-line { width: 20px; height: 1.5px; background: var(--teal); }
+    .hero h1 { font-size: 58px; font-weight: 900; line-height: 1.0; letter-spacing: -.04em; color: var(--deep); margin-bottom: 22px; }
+    .hero h1 .ht { color: var(--cta); }
+    .hero-sub { font-size: 16px; color: var(--t2); line-height: 1.75; max-width: 400px; margin-bottom: 38px; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 52px; }
+    .btn-cta { font-size: 14px; font-weight: 700; padding: 14px 30px; background: var(--cta); color: #fff; border-radius: 100px; transition: background 160ms var(--e), transform 140ms var(--e), box-shadow 180ms var(--e); }
+    .btn-cta:hover  { background: #d45522; transform: translateY(-2px); box-shadow: 0 8px 28px -8px rgba(232,99,42,.45); }
+    .btn-cta:active { transform: scale(.97); }
+    .btn-ghost { font-size: 14px; font-weight: 500; padding: 14px 24px; background: transparent; color: var(--deep); border: 1.5px solid rgba(30,45,74,.18); border-radius: 100px; transition: background 160ms var(--e), border-color 160ms var(--e); }
+    .btn-ghost:hover  { background: rgba(30,45,74,.05); border-color: rgba(30,45,74,.35); }
+    .btn-ghost:active { transform: scale(.97); }
+    .hero-stats { display: flex; gap: 36px; padding-top: 44px; border-top: 1px solid var(--bd); }
+    .hs-n { font-size: 32px; font-weight: 900; color: var(--teal-d); letter-spacing: -.03em; }
+    .hs-l { font-size: 12px; color: var(--t3); margin-top: 4px; }
+    .hero-ill { width: 100%; max-width: 280px; animation: float 5.5s ease-in-out infinite; }
+
+    /* ── PRODUCT SECTION ── */
+    .product-section {
+      display: grid; grid-template-columns: 1fr 1fr;
+      background: var(--white);
+      padding: 80px 56px;
+      gap: 64px;
+      align-items: center;
+    }
+    .product-photo-wrap {
+      background: linear-gradient(145deg, #f5f8fa 0%, #eef4f3 100%);
+      border-radius: 24px;
+      padding: 40px;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 360px;
+      position: relative;
+    }
+    .product-label {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--teal-d); white-space: nowrap;
+    }
+    .product-img { width: 100%; max-width: 320px; display: block; animation: float 6s ease-in-out infinite; }
+    .product-img-placeholder {
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; text-align: center; padding: 32px; width: 100%;
+      animation: float 6s ease-in-out infinite;
+    }
+    .pi-label { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--teal-d); }
+    .pi-name  { font-size: 20px; font-weight: 800; color: var(--deep); letter-spacing: -.02em; line-height: 1.2; }
+    .pi-sub   { font-size: 12px; color: var(--t2); }
+    .pi-units { font-size: 10px; font-weight: 700; color: var(--teal-d); background: var(--teal-l); border: 1px solid #ade8e4; border-radius: 100px; padding: 4px 14px; margin-top: 4px; }
+    .pi-hint  { font-size: 9px; color: var(--t3); margin-top: 8px; }
+    .product-content { display: flex; flex-direction: column; }
+    .tagline { font-size: 46px; font-weight: 900; line-height: 1.02; letter-spacing: -.03em; color: var(--deep); text-transform: uppercase; margin-bottom: 6px; }
+    .tagline .tc { color: var(--cta); display: block; }
+    .tagline-sub { font-size: 13px; font-weight: 500; color: var(--teal-d); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 32px; }
+    .feat-list { display: flex; flex-direction: column; gap: 0; }
+    .feat-row { display: flex; align-items: flex-start; gap: 16px; padding: 20px 0; border-bottom: 1px solid #f0f4f7; }
+    .feat-row:last-child { border-bottom: none; }
+    .feat-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(232,99,42,.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .feat-title { font-size: 14px; font-weight: 700; color: var(--tx); margin-bottom: 4px; }
+    .feat-body  { font-size: 13px; color: var(--t2); line-height: 1.6; }
+
+    /* ── PROBLEM ── */
+    .problem-section { padding: 96px 56px; text-align: center; }
+    .section-tag { font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--teal-d); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .section-tag-line { width: 16px; height: 1.5px; background: var(--teal); }
+    .display-h { font-size: 48px; font-weight: 900; line-height: 1.0; letter-spacing: -.03em; text-transform: uppercase; color: var(--deep); margin-bottom: 16px; }
+    .display-h .accent { color: var(--cta); display: block; }
+    .section-sub { font-size: 16px; color: var(--t2); line-height: 1.75; max-width: 580px; margin: 0 auto 56px; }
+    .problem-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+    .prob-card { background: var(--white); border-radius: 18px; padding: 32px 28px; text-align: left; border: 1px solid rgba(221,229,236,.6); transition: transform 200ms var(--e), box-shadow 200ms var(--e); }
+    .prob-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(30,45,74,.08); }
+    .prob-num  { font-size: 32px; font-weight: 900; color: var(--cta); letter-spacing: -.03em; opacity: .5; margin-bottom: 16px; }
+    .prob-title { font-size: 15px; font-weight: 700; color: var(--tx); margin-bottom: 10px; }
+    .prob-body  { font-size: 13px; color: var(--t2); line-height: 1.7; }
+    .prob-source { font-size: 10px; color: var(--t3); }
+
+    /* ── HOW IT WORKS ── */
+    .hiw-section { padding: 96px 56px; background: var(--white); }
+    .hiw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; margin-top: 56px; }
+    .hiw-steps { display: flex; flex-direction: column; gap: 0; }
+    .hiw-step { display: grid; grid-template-columns: 56px 1fr; gap: 20px; padding: 28px 0; border-bottom: 1px solid #f0f4f7; }
+    .hiw-step:last-child { border-bottom: none; }
+    .step-num-badge { width: 40px; height: 40px; border-radius: 12px; background: var(--deep); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; letter-spacing: .04em; }
+    .hiw-step-title { font-size: 15px; font-weight: 700; color: var(--tx); margin-bottom: 8px; }
+    .hiw-step-body  { font-size: 13px; color: var(--t2); line-height: 1.7; }
+    .hiw-step-note  { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--mid); font-weight: 600; background: rgba(61,90,150,.07); padding: 4px 12px; border-radius: 100px; margin-top: 10px; }
+    .hiw-visual { background: linear-gradient(145deg, #edf7f6 0%, var(--teal-l) 100%); border-radius: 20px; padding: 40px; display: flex; flex-direction: column; gap: 0; }
+    .hiw-stat { padding: 24px 0; border-bottom: 1px solid rgba(173,232,228,.5); }
+    .hiw-stat:last-child { border-bottom: none; }
+    .hiw-sn { font-size: 48px; font-weight: 900; color: var(--deep); letter-spacing: -.04em; line-height: 1; }
+    .hiw-sl { font-size: 13px; font-weight: 700; color: var(--tx); margin: 5px 0 4px; }
+    .hiw-sb { font-size: 12px; color: var(--t2); line-height: 1.55; }
+
+    /* ── SCIENCE ── */
+    .science-section { padding: 96px 56px; }
+    .sci-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; margin-top: 56px; }
+    .chart-panel { background: var(--white); border-radius: 20px; padding: 32px; border: 1px solid rgba(221,229,236,.6); }
+    .chart-lbl   { font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--t3); margin-bottom: 24px; }
+    .bar-rows    { display: flex; flex-direction: column; gap: 18px; }
+    .bar-row     { display: flex; align-items: center; gap: 12px; }
+    .bar-lbl     { font-size: 12px; font-weight: 500; color: var(--t2); width: 52px; flex-shrink: 0; }
+    .bar-track   { flex: 1; height: 8px; background: #edf0f3; border-radius: 100px; overflow: hidden; }
+    .bar-fill    { height: 100%; border-radius: 100px; transform: scaleX(0); transform-origin: left center; transition: transform 700ms var(--e); }
+    .chart-panel.on .bar-fill { transform: scaleX(1); }
+    .chart-panel.on .bar-row:nth-child(1) .bar-fill { transition-delay: 80ms; }
+    .chart-panel.on .bar-row:nth-child(2) .bar-fill { transition-delay: 160ms; }
+    .chart-panel.on .bar-row:nth-child(3) .bar-fill { transition-delay: 240ms; }
+    .chart-panel.on .bar-row:nth-child(4) .bar-fill { transition-delay: 320ms; }
+    .chart-panel.on .bar-row:nth-child(5) .bar-fill { transition-delay: 400ms; }
+    .bar-val     { font-size: 12px; font-weight: 700; width: 32px; text-align: right; opacity: 0; transition: opacity 280ms var(--e) 620ms; }
+    .chart-panel.on .bar-val { opacity: 1; }
+    .chart-note  { font-size: 10px; color: var(--t3); margin-top: 20px; line-height: 1.6; }
+    .sci-stats   { display: flex; flex-direction: column; gap: 0; }
+    .sci-stat    { padding: 28px 0; border-bottom: 1px solid var(--bd); transition: transform 200ms var(--e); }
+    .sci-stat:last-child { border-bottom: none; }
+    .sci-stat:hover { transform: translateX(4px); }
+    .sci-n     { font-size: 52px; font-weight: 900; color: var(--deep); letter-spacing: -.04em; line-height: 1; }
+    .sci-label { font-size: 14px; font-weight: 700; color: var(--tx); margin: 6px 0 5px; }
+    .sci-body  { font-size: 13px; color: var(--t2); line-height: 1.6; }
+
+    /* ── COMPARE ── */
+    .compare-section { padding: 96px 56px; background: var(--white); }
+    .cmp-wrap { position: relative; }
+    .cmp-best { display: grid; grid-template-columns: 1fr 140px 140px 160px; margin-bottom: 6px; }
+    .cmp-best-pill { grid-column: 4; font-size: 8px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; background: var(--teal-d); color: #fff; padding: 5px 12px; border-radius: 100px; text-align: center; }
+    .cmp { background: var(--bg); border-radius: 20px; border: 1px solid var(--bd); overflow: hidden; }
+    .cmp-head { display: grid; grid-template-columns: 1fr 140px 140px 160px; background: var(--white); }
+    .cmp-col-h { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--t3); text-align: center; padding: 18px 8px; }
+    .cmp-col-h.hl { color: var(--deep); background: var(--teal-l); font-weight: 800; }
+    .cmp-row { display: grid; grid-template-columns: 1fr 140px 140px 160px; transition: background 160ms var(--e); }
+    .cmp-row > * { padding: 16px 20px; border-top: 1px solid var(--bd); }
+    .cmp-row:hover { background: rgba(255,255,255,.6); }
+    .lyos-cell { background: var(--teal-l); }
+    .feat-name { font-size: 13px; font-weight: 500; color: var(--tx); }
+    .feat-name .note { font-size: 11px; color: var(--t3); font-weight: 400; display: block; margin-top: 2px; }
+    .cmp-val { display: flex; align-items: center; justify-content: center; }
+    .yes-dot { width: 24px; height: 24px; border-radius: 50%; background: rgba(78,205,196,.15); border: 1.5px solid #ade8e4; display: flex; align-items: center; justify-content: center; }
+    .no-dot  { width: 24px; height: 24px; border-radius: 50%; background: #f3f5f7; border: 1px solid #dde5ec; display: flex; align-items: center; justify-content: center; }
+    .cmp-txt { font-size: 12px; color: var(--t3); }
+    .lyos-val-txt { font-size: 11px; font-weight: 700; color: var(--teal-d); }
+
+    /* ── FAQ ── */
+    .faq-section { padding: 96px 56px; }
+    .faqs { display: flex; flex-direction: column; gap: 8px; max-width: 760px; margin: 0 auto; }
+    .faq  { background: var(--white); border-radius: 14px; overflow: hidden; border: 1px solid rgba(221,229,236,.6); transition: box-shadow 200ms var(--e), transform 200ms var(--e); }
+    .faq:hover { box-shadow: 0 4px 24px rgba(30,45,74,.07); transform: translateY(-1px); }
+    .faq.open  { box-shadow: 0 4px 28px rgba(78,205,196,.18); border-color: #ade8e4; }
+    .faq-q { padding: 20px 24px; font-size: 15px; font-weight: 600; color: var(--tx); display: flex; justify-content: space-between; align-items: center; gap: 16px; cursor: pointer; user-select: none; }
+    .faq-q:active { transform: scale(.99); }
+    .faq-icon { width: 26px; height: 26px; border-radius: 50%; background: #f0f4f7; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 200ms var(--e), transform 280ms var(--e); }
+    .faq.open .faq-icon { background: var(--teal-d); transform: rotate(45deg); }
+    .faq-icon svg { color: var(--t3); transition: color 200ms var(--e); }
+    .faq.open .faq-icon svg { color: #fff; }
+    .faq-a { font-size: 14px; color: var(--t2); line-height: 1.75; padding: 0 24px; max-height: 0; overflow: hidden; transition: max-height 360ms var(--e), padding 280ms var(--e); }
+    .faq.open .faq-a { max-height: 220px; padding-bottom: 22px; }
+
+    /* ── CTA ── */
+    .cta-section { padding: 0 40px 48px; }
+    .cta-block {
+      background: var(--deep);
+      border-radius: 28px;
+      padding: 88px 72px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center;
+    }
+    .cta-tag  { font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgba(78,205,196,.65); margin-bottom: 16px; }
+    .cta-h    { font-size: 40px; font-weight: 900; line-height: 1.05; letter-spacing: -.03em; text-transform: uppercase; color: #fff; margin-bottom: 14px; }
+    .cta-h .ac { color: var(--teal); }
+    .cta-sub  { font-size: 15px; color: rgba(255,255,255,.5); line-height: 1.7; }
+    .cta-r    { display: flex; flex-direction: column; gap: 12px; }
+    .cta-card { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 24px; }
+    .cta-ct   { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+    .cta-cb   { font-size: 13px; color: rgba(255,255,255,.45); line-height: 1.55; }
+    .email-row { display: flex; gap: 8px; margin-top: 16px; }
+    .email-inp { flex: 1; font-family: 'Outfit', system-ui, sans-serif; font-size: 13px; padding: 12px 18px; border-radius: 100px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.07); color: #fff; outline: none; transition: border-color 180ms var(--e); }
+    .email-inp::placeholder { color: rgba(255,255,255,.25); }
+    .email-inp:focus { border-color: rgba(78,205,196,.5); }
+    .btn-coral { font-size: 13px; font-weight: 700; padding: 12px 18px; background: var(--cta); color: #fff; border-radius: 100px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: background 160ms var(--e), transform 140ms var(--e), gap 160ms var(--e); }
+    .btn-coral:hover  { background: #d45522; gap: 10px; }
+    .btn-coral:active { transform: scale(.97); }
+
+    /* ── FOOTER ── */
+    footer { padding: 28px 56px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
+    .footer-logo  { font-size: 13px; font-weight: 600; letter-spacing: .14em; color: var(--deep); }
+    .footer-legal { font-size: 10px; color: var(--t3); max-width: 540px; line-height: 1.6; }
+    .footer-ac    { font-size: 11px; color: var(--t3); white-space: nowrap; }
+    .footer-ac a  { color: var(--teal-d); font-weight: 600; transition: color 160ms var(--e); }
+    .footer-ac a:hover { color: var(--teal); }
+
+    /* ── TEAM ── */
+    .team-section { padding: 96px 56px; background: var(--white); }
+    .team-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; margin-top: 56px; }
+    .team-card { background: var(--bg); border-radius: 20px; padding: 32px 24px; text-align: center; border: 1px solid rgba(221,229,236,.5); transition: transform 200ms var(--e), box-shadow 200ms var(--e); }
+    .team-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(30,45,74,.08); }
+    .team-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--deep); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: #fff; margin: 0 auto 16px; letter-spacing: .02em; }
+    .team-name { font-size: 15px; font-weight: 700; color: var(--tx); margin-bottom: 4px; }
+    .team-role { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--cta); margin-bottom: 10px; }
+    .team-bio  { font-size: 12px; color: var(--t2); line-height: 1.6; }
+
+    /* ── STRATEGIC ADVANTAGE ── */
+    .advantage-section { padding: 96px 56px; }
+    .advantage-quote { font-size: 28px; font-weight: 900; color: var(--deep); letter-spacing: -.02em; line-height: 1.2; max-width: 600px; margin: 0 auto 56px; text-align: center; }
+    .advantage-quote em { color: var(--cta); font-style: normal; display: block; }
+    .advantage-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 860px; margin: 0 auto; }
+    .adv-col { background: var(--white); border-radius: 20px; padding: 36px; border: 1px solid rgba(221,229,236,.6); }
+    .adv-col-tag { font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--teal-d); margin-bottom: 12px; }
+    .adv-col-h { font-size: 20px; font-weight: 800; color: var(--deep); margin-bottom: 12px; }
+    .adv-col-b { font-size: 14px; color: var(--t2); line-height: 1.7; }
+
+    /* ── ROADMAP ── */
+    .roadmap-section { padding: 96px 56px; background: var(--white); }
+    .roadmap-steps { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; margin-top: 56px; position: relative; }
+    .roadmap-steps::before { content:''; position:absolute; top:28px; left:12.5%; right:12.5%; height:2px; background: linear-gradient(to right, var(--teal-d), var(--cta)); }
+    .roadmap-step { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 16px; position: relative; }
+    .roadmap-dot { width: 56px; height: 56px; border-radius: 50%; background: var(--white); border: 2px solid var(--teal-d); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--teal-d); margin-bottom: 16px; position: relative; z-index: 1; transition: background 200ms var(--e), color 200ms var(--e); }
+    .roadmap-step.done .roadmap-dot { background: var(--teal-d); color: #fff; border-color: var(--teal-d); }
+    .roadmap-step.active .roadmap-dot { background: var(--cta); color: #fff; border-color: var(--cta); box-shadow: 0 0 0 6px rgba(232,99,42,.12); }
+    .roadmap-date { font-size: 11px; font-weight: 700; color: var(--cta); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+    .roadmap-title { font-size: 13px; font-weight: 700; color: var(--tx); line-height: 1.4; margin-bottom: 6px; }
+    .roadmap-note { font-size: 11px; color: var(--t3); line-height: 1.5; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 860px) {
+      .nav { padding: 14px 20px; }
+      .nav-links { display: none; }
+      .hero, .product-section, .hiw-grid, .sci-grid, .cta-block { grid-template-columns: 1fr; }
+      .hero-l { padding: 56px 24px 36px; }
+      .hero h1 { font-size: 40px; }
+      .hero-r { padding: 36px 24px; border-radius: 0; }
+      .product-section { padding: 56px 24px; gap: 40px; }
+      .problem-section, .hiw-section, .science-section, .compare-section, .faq-section,
+      .team-section, .advantage-section, .roadmap-section { padding: 64px 24px; }
+      .team-grid { grid-template-columns: 1fr 1fr; }
+      .advantage-cols { grid-template-columns: 1fr; }
+      .roadmap-steps { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .roadmap-steps::before { display: none; }
+      .problem-cards { grid-template-columns: 1fr; }
+      .display-h { font-size: 36px; }
+      .tagline { font-size: 34px; }
+      .cmp-head, .cmp-row, .cmp-best { grid-template-columns: 1fr 80px 80px 90px; }
+      .cta-section { padding: 0 20px 36px; }
+      .cta-block { padding: 52px 32px; }
+      .cta-h { font-size: 30px; }
+      footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; gap: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="brand-logo">
+      <img src="./lyos-logo-final.png?v=5" alt="LYOS" style="display:block;width:160px;height:auto;">
+    </div>
+    <ul class="nav-links" role="list">
+      <li><a href="#product">Product</a></li>
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#science">Science</a></li>
+      <li><a href="#team">Team</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <button class="btn-nav">For Investors</button>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-l">
+      <div class="eyebrow anim"><span class="eyebrow-line"></span>Neonatal Platelet Secretome</div>
+      <h1 class="anim" data-d="1">
+        What if your hair<br>could <span class="ht">remember</span><br>being young?
+      </h1>
+      <p class="hero-sub anim" data-d="2">
+        LYOS delivers growth signals from newborn cord blood — the most potent regenerative biology on earth. One injection, every 90 days.
+      </p>
+      <div class="hero-actions anim" data-d="3">
+        <button class="btn-cta">For Investors</button>
+        <button class="btn-ghost">See the Data</button>
+      </div>
+      <div class="hero-stats anim" data-d="4">
+        <div class="hs"><div class="hs-n">+24%</div><div class="hs-l">More growth factors than adult PRP</div></div>
+        <div class="hs"><div class="hs-n">60 sec</div><div class="hs-l">To prepare each dose</div></div>
+        <div class="hs"><div class="hs-n">90 days</div><div class="hs-l">Between treatments</div></div>
+      </div>
+    </div>
+    <div class="hero-r">
+      <img src="./lyos-vial-hero.png?v=2" class="hero-vial-img anim" data-d="2" alt="LYOS-001 — neonatal platelet secretome vial"/>
+      <svg style="display:none" viewBox="0 0 480 560" fill="none" width="100%">
+        <defs>
+          <!-- Glass body gradient -->
+          <linearGradient id="hgl" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="#7ab8c0" stop-opacity=".55"/>
+            <stop offset="6%"   stop-color="#daf4f4" stop-opacity=".9"/>
+            <stop offset="40%"  stop-color="#f0fafa" stop-opacity=".25"/>
+            <stop offset="90%"  stop-color="#c8ecec" stop-opacity=".75"/>
+            <stop offset="100%" stop-color="#5a9aa0" stop-opacity=".6"/>
+          </linearGradient>
+          <!-- Cap gradient -->
+          <linearGradient id="hcap" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#8a9aaa"/>
+            <stop offset="45%"  stop-color="#5a6878"/>
+            <stop offset="100%" stop-color="#3a4858"/>
+          </linearGradient>
+          <!-- Coral powder radial -->
+          <radialGradient id="hpow" cx="50%" cy="25%" r="70%">
+            <stop offset="0%"   stop-color="#ff8860"/>
+            <stop offset="45%"  stop-color="#e8632a"/>
+            <stop offset="100%" stop-color="#a03010"/>
+          </radialGradient>
+          <!-- Ambient glow behind vial -->
+          <radialGradient id="hamb" cx="50%" cy="55%" r="50%">
+            <stop offset="0%"   stop-color="#4ecdc4" stop-opacity=".18"/>
+            <stop offset="100%" stop-color="#4ecdc4" stop-opacity="0"/>
+          </radialGradient>
+          <!-- Coral ambient -->
+          <radialGradient id="hcamb" cx="50%" cy="80%" r="40%">
+            <stop offset="0%"   stop-color="#e8632a" stop-opacity=".2"/>
+            <stop offset="100%" stop-color="#e8632a" stop-opacity="0"/>
+          </radialGradient>
+          <!-- Wisp glow filter -->
+          <filter id="hwg" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b1"/>
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b2"/>
+            <feMerge><feMergeNode in="b1"/><feMergeNode in="b1"/><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <!-- Powder glow -->
+          <filter id="hpg" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="10"/>
+          </filter>
+          <!-- Particle glow -->
+          <filter id="hptg" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5"/>
+          </filter>
+          <!-- Clip to vial interior -->
+          <clipPath id="hvclip">
+            <rect x="139" y="106" width="202" height="380" rx="18"/>
+          </clipPath>
+        </defs>
+
+        <!-- ── BACKGROUND AMBIENCE ── -->
+        <ellipse cx="240" cy="320" rx="200" ry="180" fill="url(#hamb)"/>
+        <ellipse cx="240" cy="430" rx="130" ry="90"  fill="url(#hcamb)"/>
+
+        <!-- Floating background particles -->
+        <circle cx="60"  cy="80"  r="1.2" fill="#4ecdc4" opacity=".4" filter="url(#hptg)"/>
+        <circle cx="420" cy="60"  r="1.5" fill="#4ecdc4" opacity=".3" filter="url(#hptg)"/>
+        <circle cx="48"  cy="240" r="1"   fill="#e8632a" opacity=".35" filter="url(#hptg)"/>
+        <circle cx="430" cy="200" r="1.8" fill="#4ecdc4" opacity=".25" filter="url(#hptg)"/>
+        <circle cx="80"  cy="400" r="1.3" fill="#4ecdc4" opacity=".3" filter="url(#hptg)"/>
+        <circle cx="400" cy="380" r="1"   fill="#e8632a" opacity=".3" filter="url(#hptg)"/>
+        <circle cx="110" cy="480" r="1.5" fill="#4ecdc4" opacity=".2" filter="url(#hptg)"/>
+        <circle cx="380" cy="460" r="1.2" fill="#4ecdc4" opacity=".25" filter="url(#hptg)"/>
+        <circle cx="150" cy="50"  r="1"   fill="#4ecdc4" opacity=".35" filter="url(#hptg)"/>
+        <circle cx="320" cy="500" r="1.4" fill="#e8632a" opacity=".2" filter="url(#hptg)"/>
+        <circle cx="55"  cy="330" r=".8"  fill="#4ecdc4" opacity=".4"/>
+        <circle cx="440" cy="310" r="1"   fill="#4ecdc4" opacity=".3"/>
+        <circle cx="200" cy="520" r="1.2" fill="#4ecdc4" opacity=".2"/>
+        <circle cx="290" cy="36"  r="1"   fill="#e8632a" opacity=".3"/>
+
+        <!-- ── VIAL SHADOW on surface ── -->
+        <ellipse cx="240" cy="508" rx="88" ry="14" fill="#000" opacity=".28"/>
+
+        <!-- ── VIAL GLASS BODY ── -->
+        <!-- Main glass rect -->
+        <rect x="139" y="106" width="202" height="380" rx="18" fill="url(#hgl)"/>
+
+        <!-- ── CONTENT INSIDE GLASS (clipped) ── -->
+        <g clip-path="url(#hvclip)">
+          <!-- Coral powder mass glow bloom -->
+          <ellipse cx="240" cy="420" rx="110" ry="60" fill="#e8632a" filter="url(#hpg)" opacity=".55"/>
+
+          <!-- Coral powder body — organic, lumpy top edge -->
+          <path d="M139 380 Q155 355 175 362 Q195 368 210 350 Q225 332 240 345 Q255 332 270 348 Q285 362 305 354 Q325 346 341 368 L341 486 L139 486 Z" fill="url(#hpow)"/>
+          <!-- Powder surface texture highlights -->
+          <path d="M155 365 Q175 358 198 364 Q218 368 238 355" stroke="#ff9966" stroke-width="2" fill="none" opacity=".5" stroke-linecap="round"/>
+          <path d="M242 347 Q262 334 285 350 Q305 364 328 355" stroke="#ff9966" stroke-width="2" fill="none" opacity=".4" stroke-linecap="round"/>
+          <!-- Powder shadow at top -->
+          <path d="M139 380 Q155 355 175 362 Q195 368 210 350 Q225 332 240 345 Q255 332 270 348 Q285 362 305 354 Q325 346 341 368 L341 395 Q310 375 285 382 Q260 390 240 375 Q220 360 195 378 Q170 395 139 385 Z" fill="#c04010" opacity=".35"/>
+
+          <!-- ── TEAL ENERGY WISPS ── -->
+          <!-- Central tall wisp -->
+          <path d="M240 348 C238 310 245 270 235 230 C225 190 248 155 240 118" stroke="#4ecdc4" stroke-width="3.5" fill="none" stroke-linecap="round" filter="url(#hwg)" opacity=".9"/>
+          <!-- Left wisp -->
+          <path d="M215 355 C210 320 220 285 205 248 C190 212 210 180 200 148" stroke="#4ecdc4" stroke-width="2.5" fill="none" stroke-linecap="round" filter="url(#hwg)" opacity=".75"/>
+          <!-- Right wisp -->
+          <path d="M265 350 C270 315 258 278 272 240 C286 202 265 168 275 132" stroke="#4ecdc4" stroke-width="2.5" fill="none" stroke-linecap="round" filter="url(#hwg)" opacity=".7"/>
+          <!-- Thinner accent wisps -->
+          <path d="M230 352 C222 318 232 280 218 242 C204 204 220 170 212 136" stroke="#7de8e0" stroke-width="1.5" fill="none" stroke-linecap="round" filter="url(#hwg)" opacity=".6"/>
+          <path d="M250 352 C258 316 246 278 260 240 C274 202 256 172 262 138" stroke="#7de8e0" stroke-width="1.5" fill="none" stroke-linecap="round" filter="url(#hwg)" opacity=".55"/>
+          <!-- Wisp tips fade out — bright core dots -->
+          <circle cx="240" cy="122" r="4" fill="#a0f0e8" filter="url(#hwg)" opacity=".8"/>
+          <circle cx="200" cy="150" r="3" fill="#a0f0e8" filter="url(#hwg)" opacity=".6"/>
+          <circle cx="275" cy="134" r="3" fill="#a0f0e8" filter="url(#hwg)" opacity=".55"/>
+
+          <!-- Interior scattered glow particles -->
+          <circle cx="195" cy="200" r="1.5" fill="#4ecdc4" filter="url(#hptg)" opacity=".7"/>
+          <circle cx="285" cy="180" r="1.2" fill="#4ecdc4" filter="url(#hptg)" opacity=".6"/>
+          <circle cx="220" cy="155" r="1"   fill="#4ecdc4" filter="url(#hptg)" opacity=".5"/>
+          <circle cx="260" cy="210" r="1.5" fill="#4ecdc4" filter="url(#hptg)" opacity=".6"/>
+          <circle cx="175" cy="240" r="1"   fill="#4ecdc4" filter="url(#hptg)" opacity=".4"/>
+          <circle cx="305" cy="250" r="1.2" fill="#4ecdc4" filter="url(#hptg)" opacity=".4"/>
+          <circle cx="210" cy="280" r="1"   fill="#e8632a" filter="url(#hptg)" opacity=".5"/>
+          <circle cx="268" cy="296" r="1.3" fill="#e8632a" filter="url(#hptg)" opacity=".45"/>
+        </g>
+
+        <!-- ── GLASS SURFACE REFLECTIONS (over content) ── -->
+        <!-- Left edge bright streak -->
+        <rect x="139" y="106" width="12" height="380" rx="18" fill="white" opacity=".35"/>
+        <!-- Right edge darker -->
+        <rect x="329" y="106" width="12" height="380" rx="18" fill="#2a4a50" opacity=".2"/>
+        <!-- Top specular highlight (angled) -->
+        <path d="M155 108 Q200 104 260 110" stroke="white" stroke-width="3" fill="none" opacity=".22" stroke-linecap="round"/>
+        <!-- Second top highlight -->
+        <path d="M162 114 Q220 110 290 116" stroke="white" stroke-width="1.5" fill="none" opacity=".12" stroke-linecap="round"/>
+        <!-- Center vertical glow band -->
+        <rect x="218" y="110" width="44" height="374" fill="white" opacity=".04"/>
+
+        <!-- ── NECK transition ── -->
+        <path d="M143 108 L155 74 L325 74 L337 108 Z" fill="url(#hgl)"/>
+        <line x1="148" y1="108" x2="158" y2="74" stroke="white" stroke-width="3" stroke-linecap="round" opacity=".3"/>
+
+        <!-- ── RUBBER STOPPER ── -->
+        <rect x="148" y="62" width="184" height="16" rx="4" fill="#2a2a2a"/>
+        <rect x="150" y="63" width="180" height="5" rx="2" fill="white" opacity=".07"/>
+        <rect x="148" y="76" width="184" height="2" fill="black" opacity=".2"/>
+
+        <!-- ── ALUMINUM CRIMP CAP ── -->
+        <rect x="143" y="22" width="194" height="44" rx="9" fill="url(#hcap)"/>
+        <!-- Cap top shine -->
+        <rect x="143" y="22" width="194" height="12" rx="9" fill="white" opacity=".2"/>
+        <!-- Crimp lines -->
+        <rect x="143" y="36" width="194" height="2" fill="white" opacity=".1"/>
+        <rect x="143" y="42" width="194" height="2" fill="white" opacity=".09"/>
+        <rect x="143" y="48" width="194" height="2" fill="white" opacity=".08"/>
+        <rect x="143" y="54" width="194" height="2" fill="white" opacity=".07"/>
+        <!-- Left/right cap edge -->
+        <rect x="143" y="22" width="12" height="44" rx="9" fill="white" opacity=".09"/>
+        <rect x="325" y="22" width="12" height="44" rx="9" fill="#1a2030" opacity=".15"/>
+        <!-- Black rubber disc -->
+        <ellipse cx="240" cy="43" rx="52" ry="19" fill="#111"/>
+        <ellipse cx="235" cy="36" rx="28" ry="8" fill="white" opacity=".05"/>
+        <ellipse cx="240" cy="43" rx="52" ry="19" fill="none" stroke="#1a1a1a" stroke-width="1.5"/>
+        <path d="M218 34 Q238 30 260 34" stroke="white" stroke-width="1.2" fill="none" opacity=".08" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- PRODUCT SECTION -->
+  <div class="product-section" id="product">
+    <div class="product-photo-wrap anim">
+      <img src="./lyos-product.png" alt="LYOS-001 vial and packaging" class="product-img"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+      <div class="product-img-placeholder">
+        <svg viewBox="0 0 380 430" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:340px">
+          <defs>
+            <!-- Glass body: clear with very subtle blue-green tint -->
+            <linearGradient id="gl" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stop-color="#c8e8e5" stop-opacity=".5"/>
+              <stop offset="8%"   stop-color="#f0fcfb" stop-opacity=".85"/>
+              <stop offset="50%"  stop-color="#f8fffe" stop-opacity=".6"/>
+              <stop offset="92%"  stop-color="#e8f8f7" stop-opacity=".8"/>
+              <stop offset="100%" stop-color="#a8ccc9" stop-opacity=".55"/>
+            </linearGradient>
+            <!-- Silver crimp cap -->
+            <linearGradient id="sc" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="#e4e8ec"/>
+              <stop offset="30%"  stop-color="#c0c6cc"/>
+              <stop offset="60%"  stop-color="#9ca3a9"/>
+              <stop offset="100%" stop-color="#7c8388"/>
+            </linearGradient>
+            <!-- Black rubber stopper -->
+            <linearGradient id="rs" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="#2a2a2a"/>
+              <stop offset="40%"  stop-color="#111111"/>
+              <stop offset="100%" stop-color="#050505"/>
+            </linearGradient>
+            <!-- White powder -->
+            <linearGradient id="pw" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="#f8ffff"/>
+              <stop offset="100%" stop-color="#e8f5f4"/>
+            </linearGradient>
+            <!-- Box white -->
+            <linearGradient id="bx" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%"   stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f6f9fb"/>
+            </linearGradient>
+            <!-- Teal wave gradient -->
+            <linearGradient id="wv" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%"   stop-color="#4ecdc4" stop-opacity=".9"/>
+              <stop offset="100%" stop-color="#2a9e96" stop-opacity=".7"/>
+            </linearGradient>
+            <filter id="vsf" x="-40%" y="-8%" width="180%" height="116%">
+              <feDropShadow dx="8" dy="12" stdDeviation="16" flood-color="#1a2236" flood-opacity=".22"/>
+            </filter>
+            <filter id="bsf" x="-20%" y="-8%" width="140%" height="116%">
+              <feDropShadow dx="4" dy="6" stdDeviation="10" flood-color="#1a2236" flood-opacity=".1"/>
+            </filter>
+          </defs>
+
+          <!-- ══ BOX (behind vial) ══ -->
+          <g filter="url(#bsf)">
+            <!-- Box body -->
+            <rect x="186" y="42" width="172" height="290" rx="12" fill="url(#bx)" stroke="#dce6ec" stroke-width="1"/>
+
+            <!-- Teal wave design — decorative flowing curves -->
+            <path d="M186 180 Q210 140 240 160 Q270 180 300 150 Q330 120 358 140 L358 230 Q330 210 300 240 Q270 270 240 250 Q210 230 186 260 Z" fill="url(#wv)" opacity=".18"/>
+            <path d="M186 200 Q220 170 255 185 Q290 200 325 170 Q345 155 358 162 L358 220 Q340 215 310 240 Q278 265 248 248 Q218 232 186 255 Z" fill="url(#wv)" opacity=".12"/>
+            <!-- Teal accent wave lines -->
+            <path d="M186 220 Q220 195 260 208 Q295 220 330 200 Q348 190 358 196" stroke="#4ecdc4" stroke-width="1.5" fill="none" opacity=".35"/>
+            <path d="M186 232 Q218 210 256 222 Q292 234 328 214 Q346 204 358 210" stroke="#4ecdc4" stroke-width="1" fill="none" opacity=".22"/>
+
+            <!-- Box top: white area with logo -->
+            <!-- LYOS network molecule icon on box -->
+            <circle cx="218" cy="76" r="18" fill="none" stroke="#4ecdc4" stroke-width="1" opacity=".3"/>
+            <circle cx="218" cy="60" r="3.5" fill="#4ecdc4"/>
+            <circle cx="232" cy="68" r="3"   fill="#4ecdc4" opacity=".85"/>
+            <circle cx="232" cy="84" r="3"   fill="#4ecdc4" opacity=".85"/>
+            <circle cx="218" cy="92" r="3"   fill="#4ecdc4" opacity=".8"/>
+            <circle cx="204" cy="84" r="3"   fill="#4ecdc4" opacity=".85"/>
+            <circle cx="204" cy="68" r="3"   fill="#4ecdc4" opacity=".85"/>
+            <circle cx="218" cy="76" r="5"   fill="#4ecdc4" opacity=".25"/>
+            <line x1="218" y1="60"  x2="232" y2="68"  stroke="#4ecdc4" stroke-width="1" opacity=".55"/>
+            <line x1="232" y1="68"  x2="232" y2="84"  stroke="#4ecdc4" stroke-width="1" opacity=".5"/>
+            <line x1="232" y1="84"  x2="218" y2="92"  stroke="#4ecdc4" stroke-width="1" opacity=".5"/>
+            <line x1="218" y1="92"  x2="204" y2="84"  stroke="#4ecdc4" stroke-width="1" opacity=".5"/>
+            <line x1="204" y1="84"  x2="204" y2="68"  stroke="#4ecdc4" stroke-width="1" opacity=".5"/>
+            <line x1="204" y1="68"  x2="218" y2="60"  stroke="#4ecdc4" stroke-width="1" opacity=".55"/>
+            <line x1="218" y1="76"  x2="218" y2="60"  stroke="#4ecdc4" stroke-width=".7" opacity=".3"/>
+            <line x1="218" y1="76"  x2="232" y2="68"  stroke="#4ecdc4" stroke-width=".7" opacity=".3"/>
+            <line x1="218" y1="76"  x2="232" y2="84"  stroke="#4ecdc4" stroke-width=".7" opacity=".3"/>
+            <line x1="218" y1="76"  x2="218" y2="92"  stroke="#4ecdc4" stroke-width=".7" opacity=".3"/>
+            <line x1="218" y1="76"  x2="204" y2="84"  stroke="#4ecdc4" stroke-width=".7" opacity=".3"/>
+            <line x1="218" y1="76"  x2="204" y2="68"  stroke="#4ecdc4" stroke-width=".7" opacity=".3"/>
+
+            <!-- LYOS brand name on box -->
+            <text x="256" y="70" font-family="Outfit,system-ui,sans-serif" font-weight="800" font-size="22" letter-spacing="5" fill="#1e2d4a">LYOS</text>
+            <!-- Subtitle on box -->
+            <text x="256" y="86" font-family="Outfit,system-ui,sans-serif" font-weight="500" font-size="9" fill="#526070">Neonatal Platelet</text>
+            <text x="256" y="98" font-family="Outfit,system-ui,sans-serif" font-weight="500" font-size="9" fill="#526070">Secretome</text>
+
+            <!-- Thin divider -->
+            <rect x="196" y="112" width="154" height="1" fill="#dde8ec"/>
+
+            <!-- 100 Units teal badge (matches the product photo teal pill) -->
+            <rect x="218" y="122" width="74" height="26" rx="6" fill="#4ecdc4"/>
+            <text x="255" y="139" text-anchor="middle" font-family="Outfit,system-ui,sans-serif" font-weight="800" font-size="12" fill="white">100</text>
+            <text x="318" y="139" font-family="Outfit,system-ui,sans-serif" font-weight="600" font-size="9.5" fill="#2a9e96">Units</text>
+
+            <!-- Tagline on box -->
+            <text x="196" y="166" font-family="Outfit,system-ui,sans-serif" font-weight="400" font-size="8" fill="#8a96a3" font-style="italic">Youth is Wasted on the Young.</text>
+            <text x="196" y="179" font-family="Outfit,system-ui,sans-serif" font-weight="700" font-size="8" fill="#e8632a">So We Borrowed It.</text>
+
+            <!-- Bottom: barcode lines -->
+            <g opacity=".14" transform="translate(200,278)">
+              <rect x="0"  width="2"   height="20" fill="#1e2d4a"/><rect x="4"  width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="7"  width="2.5" height="20" fill="#1e2d4a"/><rect x="11" width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="14" width="2"   height="20" fill="#1e2d4a"/><rect x="18" width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="21" width="2.5" height="20" fill="#1e2d4a"/><rect x="26" width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="29" width="2"   height="20" fill="#1e2d4a"/><rect x="33" width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="36" width="2.5" height="20" fill="#1e2d4a"/><rect x="41" width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="44" width="2"   height="20" fill="#1e2d4a"/><rect x="48" width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="51" width="2.5" height="20" fill="#1e2d4a"/><rect x="56" width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="59" width="2"   height="20" fill="#1e2d4a"/><rect x="63" width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="66" width="2.5" height="20" fill="#1e2d4a"/><rect x="71" width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="74" width="2"   height="20" fill="#1e2d4a"/><rect x="78" width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="81" width="2.5" height="20" fill="#1e2d4a"/><rect x="86" width="1"   height="20" fill="#1e2d4a"/>
+              <rect x="89" width="2"   height="20" fill="#1e2d4a"/>
+            </g>
+            <!-- "americord" small credit on box -->
+            <text x="348" y="322" text-anchor="end" font-family="Outfit,system-ui,sans-serif" font-weight="500" font-size="7" fill="#b0bcc4" font-style="italic">americord</text>
+          </g>
+
+          <!-- ══ VIAL GROUND SHADOW ══ -->
+          <ellipse cx="105" cy="390" rx="52" ry="8" fill="#1a2236" opacity=".1"/>
+
+          <!-- ══ VIAL — shorter, wider ══ -->
+          <!-- Vial center x=105, body: x=70 y=148 w=70 h=226 -->
+          <g filter="url(#vsf)">
+            <!-- Glass body -->
+            <rect x="70" y="148" width="70" height="226" rx="13" fill="url(#gl)"/>
+            <!-- Bottom dome -->
+            <ellipse cx="105" cy="374" rx="35" ry="8" fill="#c8e4e2" opacity=".5"/>
+
+            <!-- Powder cake (bottom 38%) -->
+            <rect x="74" y="286" width="62" height="82" rx="4" fill="url(#pw)"/>
+            <!-- Powder top curve -->
+            <path d="M74 286 Q90 280 105 282 Q120 280 136 286" stroke="#c0e8e4" stroke-width="1.2" fill="none"/>
+            <!-- Powder lines -->
+            <line x1="74" y1="296" x2="136" y2="296" stroke="#d8f0ee" stroke-width=".8" opacity=".8"/>
+            <line x1="74" y1="308" x2="136" y2="308" stroke="#d8f0ee" stroke-width=".8" opacity=".7"/>
+            <line x1="74" y1="320" x2="136" y2="320" stroke="#d8f0ee" stroke-width=".8" opacity=".6"/>
+            <line x1="74" y1="332" x2="136" y2="332" stroke="#d8f0ee" stroke-width=".8" opacity=".5"/>
+            <line x1="74" y1="344" x2="136" y2="344" stroke="#d8f0ee" stroke-width=".8" opacity=".4"/>
+            <line x1="74" y1="356" x2="136" y2="356" stroke="#d8f0ee" stroke-width=".8" opacity=".3"/>
+
+            <!-- Subtle teal tint above powder -->
+            <rect x="74" y="152" width="62" height="132" fill="#4ecdc4" opacity=".025" rx="2"/>
+
+            <!-- ── LABEL ── -->
+            <rect x="73" y="168" width="64" height="106" rx="3" fill="white"/>
+            <!-- Label edge shadows (paper feel) -->
+            <rect x="73" y="168" width="3" height="106" fill="#e8eeee" opacity=".5"/>
+            <rect x="134" y="168" width="3" height="106" fill="#d4dcdc" opacity=".4"/>
+
+            <!-- LYOS logo: icon + text in one horizontally-centered group -->
+            <!-- Icon center at (93,182), text baseline at y=187 starting at x=105 -->
+            <!-- Outer ring -->
+            <circle cx="93" cy="182" r="7" fill="none" stroke="#4ecdc4" stroke-width=".9" opacity=".45"/>
+            <!-- 6 nodes at 60° intervals, r=7 from center -->
+            <circle cx="93"  cy="175" r="1.7" fill="#4ecdc4"/>
+            <circle cx="99"  cy="178.5" r="1.5" fill="#4ecdc4" opacity=".85"/>
+            <circle cx="99"  cy="185.5" r="1.5" fill="#4ecdc4" opacity=".85"/>
+            <circle cx="93"  cy="189" r="1.7" fill="#4ecdc4" opacity=".8"/>
+            <circle cx="87"  cy="185.5" r="1.5" fill="#4ecdc4" opacity=".85"/>
+            <circle cx="87"  cy="178.5" r="1.5" fill="#4ecdc4" opacity=".85"/>
+            <!-- Spokes to center -->
+            <circle cx="93" cy="182" r="2.5" fill="#4ecdc4" opacity=".2"/>
+            <!-- Edges connecting nodes -->
+            <line x1="93" y1="175"  x2="99" y2="178.5" stroke="#4ecdc4" stroke-width=".7" opacity=".55"/>
+            <line x1="99" y1="178.5" x2="99" y2="185.5" stroke="#4ecdc4" stroke-width=".7" opacity=".5"/>
+            <line x1="99" y1="185.5" x2="93" y2="189"  stroke="#4ecdc4" stroke-width=".7" opacity=".5"/>
+            <line x1="93" y1="189"  x2="87" y2="185.5" stroke="#4ecdc4" stroke-width=".7" opacity=".5"/>
+            <line x1="87" y1="185.5" x2="87" y2="178.5" stroke="#4ecdc4" stroke-width=".7" opacity=".5"/>
+            <line x1="87" y1="178.5" x2="93" y2="175"  stroke="#4ecdc4" stroke-width=".7" opacity=".55"/>
+            <!-- Center dot spokes -->
+            <line x1="93" y1="182" x2="93"  y2="175"   stroke="#4ecdc4" stroke-width=".5" opacity=".3"/>
+            <line x1="93" y1="182" x2="99"  y2="178.5" stroke="#4ecdc4" stroke-width=".5" opacity=".3"/>
+            <line x1="93" y1="182" x2="99"  y2="185.5" stroke="#4ecdc4" stroke-width=".5" opacity=".3"/>
+            <line x1="93" y1="182" x2="93"  y2="189"   stroke="#4ecdc4" stroke-width=".5" opacity=".3"/>
+            <line x1="93" y1="182" x2="87"  y2="185.5" stroke="#4ecdc4" stroke-width=".5" opacity=".3"/>
+            <line x1="93" y1="182" x2="87"  y2="178.5" stroke="#4ecdc4" stroke-width=".5" opacity=".3"/>
+
+            <!-- "LYOS" text — dominant-baseline:central aligns mid-glyph to icon center y=182 -->
+            <text x="104" y="182" font-family="Outfit,system-ui,sans-serif" font-weight="800" font-size="11" letter-spacing="2.5" fill="#1e2d4a" dominant-baseline="central">LYOS</text>
+
+            <!-- Thin teal rule -->
+            <rect x="75" y="193" width="60" height="1" fill="#4ecdc4" opacity=".4"/>
+
+            <!-- Label body text (centered on x=105) -->
+            <text x="105" y="204" text-anchor="middle" font-family="Outfit,system-ui,sans-serif" font-weight="600" font-size="6.2" fill="#526070">Neonatal Platelet</text>
+            <text x="105" y="214" text-anchor="middle" font-family="Outfit,system-ui,sans-serif" font-weight="600" font-size="6.2" fill="#526070">Secretome</text>
+
+            <!-- defined dose / 100 units -->
+            <text x="105" y="227" text-anchor="middle" font-family="Outfit,system-ui,sans-serif" font-weight="400" font-size="5.5" fill="#8a96a3">defined dose</text>
+            <text x="105" y="238" text-anchor="middle" font-family="Outfit,system-ui,sans-serif" font-weight="700" font-size="7" fill="#2a9e96">100 units</text>
+
+            <!-- Mini barcode on label -->
+            <g opacity=".12" transform="translate(79,250)">
+              <rect x="0"  width="1.5" height="9" fill="#1e2d4a"/><rect x="3"  width="1"   height="9" fill="#1e2d4a"/>
+              <rect x="6"  width="2"   height="9" fill="#1e2d4a"/><rect x="10" width="1"   height="9" fill="#1e2d4a"/>
+              <rect x="13" width="1.5" height="9" fill="#1e2d4a"/><rect x="17" width="1"   height="9" fill="#1e2d4a"/>
+              <rect x="20" width="2"   height="9" fill="#1e2d4a"/><rect x="24" width="1"   height="9" fill="#1e2d4a"/>
+              <rect x="27" width="1.5" height="9" fill="#1e2d4a"/><rect x="31" width="1"   height="9" fill="#1e2d4a"/>
+              <rect x="34" width="2"   height="9" fill="#1e2d4a"/><rect x="38" width="1"   height="9" fill="#1e2d4a"/>
+              <rect x="41" width="1.5" height="9" fill="#1e2d4a"/><rect x="45" width="1"   height="9" fill="#1e2d4a"/>
+              <rect x="48" width="2"   height="9" fill="#1e2d4a"/>
+            </g>
+
+            <!-- ── GLASS EDGES OVER LABEL ── -->
+            <rect x="70" y="148" width="6" height="226" rx="13" fill="white" opacity=".55"/>
+            <rect x="134" y="148" width="6" height="226" rx="13" fill="#7ab8b4" opacity=".18"/>
+            <rect x="100" y="152" width="16" height="218" fill="white" opacity=".05"/>
+
+            <!-- ── NECK trapezoid ── -->
+            <path d="M74 148 L67 122 L143 122 L136 148 Z" fill="url(#gl)"/>
+            <line x1="75" y1="148" x2="68" y2="122" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity=".5"/>
+
+            <!-- ── RUBBER STOPPER (black) ── -->
+            <rect x="70" y="112" width="70" height="12" rx="3" fill="url(#rs)"/>
+            <rect x="72" y="113" width="66" height="4" rx="2" fill="white" opacity=".07"/>
+            <rect x="70" y="122" width="70" height="1.5" fill="black" opacity=".25"/>
+
+            <!-- ── ALUMINUM CRIMP CAP ── -->
+            <rect x="66" y="72" width="78" height="42" rx="8" fill="url(#sc)"/>
+            <rect x="66" y="72" width="78" height="10" rx="8" fill="white" opacity=".22"/>
+            <rect x="66" y="84"  width="78" height="1.5" fill="white" opacity=".12"/>
+            <rect x="66" y="90"  width="78" height="1.5" fill="white" opacity=".1"/>
+            <rect x="66" y="96"  width="78" height="1.5" fill="white" opacity=".1"/>
+            <rect x="66" y="102" width="78" height="1.5" fill="white" opacity=".08"/>
+            <rect x="66" y="108" width="78" height="1.5" fill="white" opacity=".06"/>
+            <rect x="66"  y="72" width="7" height="42" rx="8" fill="white"  opacity=".1"/>
+            <rect x="137" y="72" width="7" height="42" rx="8" fill="#5a6070" opacity=".15"/>
+
+            <!-- Black rubber flip-off disc -->
+            <ellipse cx="105" cy="91" rx="22" ry="19" fill="#1a1a1a"/>
+            <ellipse cx="102" cy="85" rx="12" ry="6" fill="white" opacity=".06"/>
+            <ellipse cx="105" cy="91" rx="22" ry="19" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+            <path d="M93 83 Q103 80 114 83" stroke="white" stroke-width="1" fill="none" opacity=".08" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
+      <div class="product-label">LYOS-001</div>
+    </div>
+    <div class="product-content">
+      <div class="tagline anim">
+        The Signal<br>in the
+        <span class="tc">Dust.</span>
+      </div>
+      <div class="tagline-sub anim" data-d="1">Standardized Lyophilized Neonatal Platelet Secretome</div>
+      <div class="feat-list">
+        <div class="feat-row anim" data-d="1">
+          <div class="feat-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C8 1.5 3 4 3 8.5C3 11.54 5.24 14 8 14C10.76 14 13 11.54 13 8.5C13 4 8 1.5 8 1.5Z" stroke="#e8632a" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 7L8 10" stroke="#e8632a" stroke-width="1.3" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div class="feat-title">Neonatal Source</div>
+            <div class="feat-body">Minimal protein aging with higher signaling integrity. Not depleted adult blood — cord-derived at peak potency.</div>
+          </div>
+        </div>
+        <div class="feat-row anim" data-d="2">
+          <div class="feat-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="5.5" y="2" width="5" height="9" rx="2.5" stroke="#e8632a" stroke-width="1.3"/><rect x="7" y="1" width="2" height="2" rx=".5" fill="#e8632a" opacity=".5"/><path d="M3.5 13h9" stroke="#e8632a" stroke-width="1.3" stroke-linecap="round" opacity=".4"/></svg>
+          </div>
+          <div>
+            <div class="feat-title">Lyophilized</div>
+            <div class="feat-body">Shelf-stable freeze-dried format — no cold chain, no perishable logistics. The "Botox" model for regenerative medicine.</div>
+          </div>
+        </div>
+        <div class="feat-row anim" data-d="3">
+          <div class="feat-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="#e8632a" stroke-width="1.3"/><path d="M8 5.5V8L10 10" stroke="#e8632a" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div class="feat-title">Defined Dose</div>
+            <div class="feat-body">Standardized composition — 100 units, every vial, every time. Consistent and reproducible across treatments.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROBLEM -->
+  <div class="problem-section">
+    <div class="section-tag anim"><span class="section-tag-line"></span>The market problem<span class="section-tag-line"></span></div>
+    <h2 class="display-h anim" data-d="1">
+      Regenerative medicine is here,
+      <span class="accent">but it falls short.</span>
+    </h2>
+    <p class="section-sub anim" data-d="2">
+      Together, PRP, exosome, and stem cell therapies represent a <strong>~$16B+ global market</strong> — built on source material that ages, doses that drift, and a supply chain that cannot scale.
+    </p>
+    <div class="problem-cards">
+      <div class="prob-card anim" data-d="1">
+        <div class="prob-num">01</div>
+        <div class="prob-title">No Standardization</div>
+        <div class="prob-body">PRP and exosome therapies vary clinic to clinic, batch to batch, with no consistent composition. You never know exactly what's being injected.</div>
+      </div>
+      <div class="prob-card anim" data-d="2">
+        <div class="prob-num">02</div>
+        <div class="prob-title">Depleted Source Material</div>
+        <div class="prob-body">Adult blood has lost over 80% of key growth factors by age 60. Adult PRP uses exactly those depleted signals against a problem that demands the strongest ones.</div>
+      </div>
+      <div class="prob-card anim" data-d="3">
+        <div class="prob-num">03</div>
+        <div class="prob-title">Not Scalable</div>
+        <div class="prob-body">Treatments rely on per-patient or donor material with no ability to manufacture, store, or distribute at scale. Every dose is a fresh logistics problem.</div>
+      </div>
+    </div>
+    <div class="prob-source anim">Sources: Grand View Research (Platelet Rich Plasma Market, Stem Cell Market, Exosome Market).</div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="hiw-section" id="how-it-works">
+    <div class="section-tag anim"><span class="section-tag-line"></span>How it works<span class="section-tag-line"></span></div>
+    <h2 class="display-h anim" data-d="1" style="text-align:center">
+      Simple. Elegant.
+      <span class="accent">Done.</span>
+    </h2>
+    <div class="hiw-grid">
+      <div class="hiw-steps">
+        <div class="hiw-step anim">
+          <div><div class="step-num-badge">01</div></div>
+          <div>
+            <div class="hiw-step-title">Clinic receives the vial — no cold chain required</div>
+            <div class="hiw-step-body">LYOS ships freeze-dried at room temperature. Clinics stock it like any pharmaceutical. No perishable blood draw service, no special storage required.</div>
+          </div>
+        </div>
+        <div class="hiw-step anim" data-d="1">
+          <div><div class="step-num-badge">02</div></div>
+          <div>
+            <div class="hiw-step-title">Add sterile saline. 60 seconds. Identical every time.</div>
+            <div class="hiw-step-body">Swirl gently — growth factors reactivate instantly. A standardized, precise dose every time. Not something that varies based on who drew your blood that morning.</div>
+            <div class="hiw-step-note">60 seconds from vial to treatment-ready</div>
+          </div>
+        </div>
+        <div class="hiw-step anim" data-d="2">
+          <div><div class="step-num-badge">03</div></div>
+          <div>
+            <div class="hiw-step-title">Inject. Walk out. Return in 90 days.</div>
+            <div class="hiw-step-body">Injected directly into the scalp. Neonatal growth factors reactivate dormant follicles and trigger new blood vessel formation. No recovery. No downtime.</div>
+            <div class="hiw-step-note">No surgery · No blood draw · Same-day return</div>
+          </div>
+        </div>
+      </div>
+      <div class="hiw-visual anim" data-d="2">
+        <div class="hiw-stat" style="border:none;background:linear-gradient(135deg,#edfafa,#f5fffe);border-radius:20px;padding:40px;">
+          <div class="hiw-sn" style="font-size:48px;color:var(--teal-d)">90</div>
+          <div class="hiw-sl">Days between treatments</div>
+          <div class="hiw-sb">One injection every quarter. No daily pill. No monthly visits. LYOS fits into life, not the other way around.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCIENCE -->
+  <div class="science-section" id="science">
+    <div class="section-tag anim"><span class="section-tag-line"></span>The science, made simple<span class="section-tag-line"></span></div>
+    <h2 class="display-h anim" data-d="1" style="text-align:center">
+      Why cord blood matters.
+      <span class="accent">The numbers prove it.</span>
+    </h2>
+    <p class="section-sub anim" data-d="2">Growth signals in your blood peak the day you're born. By 60, they've dropped by over 80%. LYOS starts where your biology was at its strongest.</p>
+    <div class="sci-grid anim" data-d="3">
+      <div class="sci-stats">
+        <div class="sci-stat"><div class="sci-n">+24%</div><div class="sci-label">More PDGF-BB than adult PRP</div><div class="sci-body">The primary signal that tells cells to migrate and multiply. More of it means a faster, stronger response.</div></div>
+        <div class="sci-stat"><div class="sci-n">12h</div><div class="sci-label">Faster tissue closure in lab tests</div><div class="sci-body">Neonatal cord blood factors closed wounds 12 hours faster than adult PRP in head-to-head scratch assays.</div></div>
+        <div class="sci-stat"><div class="sci-n">M2</div><div class="sci-label">Anti-inflammatory macrophage shift</div><div class="sci-body">Neonatal signals shift immune cells toward healing mode. Your scalp responds with repair, not reaction.</div></div>
+      </div>
+      <div class="chart-panel">
+        <div class="chart-lbl">Growth signal potency — % of neonatal baseline</div>
+        <div class="bar-rows">
+          <div class="bar-row"><div class="bar-lbl">Newborn</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--teal-d);"></div></div><div class="bar-val" style="color:var(--teal-d);">100%</div></div>
+          <div class="bar-row"><div class="bar-lbl">Age 20</div><div class="bar-track"><div class="bar-fill" style="width:80%;background:#3d5a96;"></div></div><div class="bar-val" style="color:#3d5a96;">80%</div></div>
+          <div class="bar-row"><div class="bar-lbl">Age 30</div><div class="bar-track"><div class="bar-fill" style="width:62%;background:#4ecdc4;"></div></div><div class="bar-val" style="color:#2a9e96;">62%</div></div>
+          <div class="bar-row"><div class="bar-lbl">Age 45</div><div class="bar-track"><div class="bar-fill" style="width:38%;background:#ade8e4;"></div></div><div class="bar-val" style="color:#8a96a3;">38%</div></div>
+          <div class="bar-row"><div class="bar-lbl">Age 60</div><div class="bar-track"><div class="bar-fill" style="width:20%;background:#dde5ec;"></div></div><div class="bar-val" style="color:#8a96a3;">20%</div></div>
+        </div>
+        <div class="chart-note">Based on published growth factor decline data (Stem Cells Dev. 2011–2020). Mani et al. 2024, Int. Journal of Biological Macromolecules.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARE -->
+  <div class="compare-section" id="compare">
+    <div class="section-tag anim"><span class="section-tag-line"></span>Compare your options<span class="section-tag-line"></span></div>
+    <h2 class="display-h anim" data-d="1" style="text-align:center">
+      Finally built around
+      <span class="accent">your life.</span>
+    </h2>
+    <div class="cmp-wrap anim" data-d="2">
+      <div class="cmp-best"><span class="cmp-best-pill">Best</span></div>
+      <div class="cmp">
+      <div class="cmp-head">
+        <div></div>
+        <div class="cmp-col-h">Minoxidil / Fin.</div>
+        <div class="cmp-col-h">Adult PRP</div>
+        <div class="cmp-col-h hl">LYOS-001</div>
+      </div>
+      <div class="cmp-row"><div><div class="feat-name">Frequency<span class="note">How often required</span></div></div><div class="cmp-val"><div class="cmp-txt">Daily</div></div><div class="cmp-val"><div class="cmp-txt">Monthly</div></div><div class="cmp-val lyos-cell"><span class="lyos-val-txt">Every 90 days</span></div></div>
+      <div class="cmp-row"><div><div class="feat-name">No blood draw needed<span class="note">Walk in, walk out</span></div></div><div class="cmp-val"><div class="yes-dot"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#2a9e96" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div><div class="cmp-val"><div class="no-dot"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="#8a96a3" stroke-width="1.2" stroke-linecap="round"/></svg></div></div><div class="cmp-val lyos-cell"><div class="yes-dot"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#2a9e96" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div></div>
+      <div class="cmp-row"><div><div class="feat-name">Consistent results<span class="note">Standardized dose, not doctor-dependent</span></div></div><div class="cmp-val"><div class="no-dot"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="#8a96a3" stroke-width="1.2" stroke-linecap="round"/></svg></div></div><div class="cmp-val"><div class="no-dot"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="#8a96a3" stroke-width="1.2" stroke-linecap="round"/></svg></div></div><div class="cmp-val lyos-cell"><span class="lyos-val-txt" style="font-size:10px;line-height:1.3;text-align:center">Defined dose<br><span style="font-weight:400;color:var(--t3)">Efficacy: Phase II</span></span></div></div>
+      <div class="cmp-row"><div><div class="feat-name">No serious side effects<span class="note">No cardiac or sexual risk</span></div></div><div class="cmp-val"><div class="no-dot"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="#8a96a3" stroke-width="1.2" stroke-linecap="round"/></svg></div></div><div class="cmp-val"><div class="yes-dot"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#2a9e96" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div><div class="cmp-val lyos-cell"><div class="yes-dot"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#2a9e96" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div></div>
+      <div class="cmp-row"><div><div class="feat-name">Neonatal growth factors<span class="note">Peak potency, not age-depleted</span></div></div><div class="cmp-val"><div class="no-dot"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="#8a96a3" stroke-width="1.2" stroke-linecap="round"/></svg></div></div><div class="cmp-val"><div class="no-dot"><svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="#8a96a3" stroke-width="1.2" stroke-linecap="round"/></svg></div></div><div class="cmp-val lyos-cell"><div class="yes-dot"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="#2a9e96" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div></div>
+    </div></div>
+  </div>
+
+  <!-- TEAM -->
+  <div class="team-section" id="team">
+    <div class="section-tag anim"><span class="section-tag-line"></span>The team<span class="section-tag-line"></span></div>
+    <h2 class="display-h anim" data-d="1" style="text-align:center">
+      Built by people who
+      <span class="accent">know the biology.</span>
+    </h2>
+    <div class="team-grid">
+      <div class="team-card anim" data-d="1">
+        <div class="team-avatar" style="background:#1e2d4a;">MS</div>
+        <div class="team-name">Martin Smithmyer</div>
+        <div class="team-role">CEO</div>
+        <div class="team-bio">Founder of Americord. Built the largest private cord blood bank in the US. Has spent 15 years at the intersection of cord blood and regenerative medicine.</div>
+      </div>
+      <div class="team-card anim" data-d="2">
+        <div class="team-avatar" style="background:#2a9e96;">RD</div>
+        <div class="team-name">Robert Dracker, MD</div>
+        <div class="team-role">CMO</div>
+        <div class="team-bio">Pediatric hematologist-oncologist with decades of experience in cord blood transplantation and cell therapy clinical development.</div>
+      </div>
+      <div class="team-card anim" data-d="3">
+        <div class="team-avatar" style="background:#3d5a96;">SA</div>
+        <div class="team-name">Sophia Aburmeileh</div>
+        <div class="team-role">COO</div>
+        <div class="team-bio">Operationalized Americord's national collection and processing network. Expert in regulated biologics manufacturing and quality systems.</div>
+      </div>
+      <div class="team-card anim" data-d="4">
+        <div class="team-avatar" style="background:#e8632a;">KS</div>
+        <div class="team-name">Kendal Schoettlin</div>
+        <div class="team-role">CFO</div>
+        <div class="team-bio">Finance lead across Americord's growth from startup to market leader. Deep experience in biotech capital formation and investor relations.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRATEGIC ADVANTAGE -->
+  <div class="advantage-section" id="advantage">
+    <div class="section-tag anim"><span class="section-tag-line"></span>Unfair advantage<span class="section-tag-line"></span></div>
+    <div class="advantage-quote anim" data-d="1">
+      "You can't spin up<br>a cord blood network."
+      <em>We already have one.</em>
+    </div>
+    <div class="advantage-cols">
+      <div class="adv-col anim" data-d="2">
+        <div class="adv-col-tag">Supply</div>
+        <div class="adv-col-h">Americord Donor Network</div>
+        <div class="adv-col-b">LYOS is built on top of Americord — one of the largest private cord blood banks in the US. Over 15 years of donor relationships, collection infrastructure, and regulatory experience. A competitor cannot replicate this supply chain in months or years.</div>
+      </div>
+      <div class="adv-col anim" data-d="3">
+        <div class="adv-col-tag">Lab</div>
+        <div class="adv-col-h">Somerset, NJ Facility</div>
+        <div class="adv-col-b">Cord blood is already being processed in our cGMP-compliant facility in Somerset, NJ. Secretome extraction and lyophilization can be integrated directly into existing workflows — dramatically compressing time to manufacturing scale.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div class="roadmap-section" id="roadmap">
+    <div class="section-tag anim"><span class="section-tag-line"></span>Development timeline<span class="section-tag-line"></span></div>
+    <h2 class="display-h anim" data-d="1" style="text-align:center">
+      The path to
+      <span class="accent">approval.</span>
+    </h2>
+    <div class="roadmap-steps">
+      <div class="roadmap-step done anim" data-d="1">
+        <div class="roadmap-dot">✓</div>
+        <div class="roadmap-date">Q3 2026</div>
+        <div class="roadmap-title">GLP Tox Complete</div>
+        <div class="roadmap-note">Good Laboratory Practice toxicology study confirming safety profile.</div>
+      </div>
+      <div class="roadmap-step anim" data-d="2">
+        <div class="roadmap-dot">02</div>
+        <div class="roadmap-date">Q2 2027</div>
+        <div class="roadmap-title">IND Submitted</div>
+        <div class="roadmap-note">Investigational New Drug application filed with the FDA.</div>
+      </div>
+      <div class="roadmap-step active anim" data-d="3">
+        <div class="roadmap-dot">03</div>
+        <div class="roadmap-date">Q3 2027</div>
+        <div class="roadmap-title">Phase 1/2 Trial Start</div>
+        <div class="roadmap-note">First-in-human safety and efficacy trial enrollment opens.</div>
+      </div>
+      <div class="roadmap-step anim" data-d="4">
+        <div class="roadmap-dot">04</div>
+        <div class="roadmap-date">Mid-2029</div>
+        <div class="roadmap-title">POC Readout</div>
+        <div class="roadmap-note">Proof-of-concept data from Phase 1/2 — the commercial inflection point.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section" id="faq">
+    <div class="section-tag anim"><span class="section-tag-line"></span>Common questions<span class="section-tag-line"></span></div>
+    <h2 class="display-h anim" data-d="1" style="text-align:center">
+      Things people
+      <span class="accent">want to know.</span>
+    </h2>
+    <div class="faqs">
+      <div class="faq anim" data-d="1">
+        <div class="faq-q" role="button" aria-expanded="false" tabindex="0" onclick="toggleFaq(this)" onkeydown="if(event.key==='Enter'||event.key===' ')toggleFaq(this)">
+          What exactly is neonatal platelet secretome?
+          <div class="faq-icon"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1.5L5 8.5M1.5 5L8.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="faq-a" role="region">It's the growth factor-rich signaling fluid released by neonatal platelets from cord blood. Unlike adult PRP which draws from your own blood, LYOS-001 uses cord-derived material collected at birth — when regenerative signaling is at its highest. The result is a standardized, freeze-dried product with consistent potency every vial.</div>
+      </div>
+      <div class="faq anim" data-d="2">
+        <div class="faq-q" role="button" aria-expanded="false" tabindex="0" onclick="toggleFaq(this)" onkeydown="if(event.key==='Enter'||event.key===' ')toggleFaq(this)">
+          Is this the same thing as PRP?
+          <div class="faq-icon"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1.5L5 8.5M1.5 5L8.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="faq-a" role="region">No. Traditional PRP uses your own adult blood — already depleted of growth signals. LYOS uses standardized neonatal cord blood with significantly higher concentrations of growth factors. It's also freeze-dried, so every dose is identical regardless of which clinic or which day you visit.</div>
+      </div>
+      <div class="faq anim" data-d="3">
+        <div class="faq-q" role="button" aria-expanded="false" tabindex="0" onclick="toggleFaq(this)" onkeydown="if(event.key==='Enter'||event.key===' ')toggleFaq(this)">
+          Will my body reject it? Is it safe?
+          <div class="faq-icon"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1.5L5 8.5M1.5 5L8.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="faq-a" role="region">LYOS-001 is cell-free — it contains signaling proteins only, not live cells. This eliminates immune rejection risk. The product is investigational and not yet FDA-approved; clinical trials planned for 2027–2029 will formally establish safety and efficacy.</div>
+      </div>
+      <div class="faq anim" data-d="4">
+        <div class="faq-q" role="button" aria-expanded="false" tabindex="0" onclick="toggleFaq(this)" onkeydown="if(event.key==='Enter'||event.key===' ')toggleFaq(this)">
+          When can I actually get this?
+          <div class="faq-icon"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1.5L5 8.5M1.5 5L8.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="faq-a" role="region">LYOS-001 is not yet FDA-approved. Clinical trials are expected to begin in 2027, with proof-of-concept readout targeted for mid-2029. Join the interest list to be notified when trials open near you or when LYOS becomes commercially available.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <div class="cta-block">
+      <div>
+        <div class="cta-tag anim">Join the list</div>
+        <h2 class="cta-h anim" data-d="1">Be first to know when <span class="ac">LYOS</span> is near you.</h2>
+        <p class="cta-sub anim" data-d="2">Clinical trials open 2027. We'll notify you when enrollment opens in your area.</p>
+      </div>
+      <div class="cta-r">
+        <div class="cta-card anim" data-d="1">
+          <div class="cta-ct">Join the patient interest list</div>
+          <div class="cta-cb">First access to trial enrollment and commercial availability updates.</div>
+          <div class="email-row">
+            <input class="email-inp" type="email" placeholder="your@email.com" aria-label="Email address" />
+            <button class="btn-coral">
+              Notify me
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5h7M5.5 2.5L8.5 5.5l-3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08);">
+            <a href="#advantage" style="font-size:13px;font-weight:700;color:#fff;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:11px 18px;border-radius:100px;border:1.5px solid rgba(78,205,196,.45);transition:border-color 160ms,background 160ms;">I'm an investor, not a patient →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">
+      <img src="./lyos-logo-final.png?v=5" alt="LYOS" style="display:block;width:100px;height:auto;opacity:.7;">
+    </div>
+    <span class="footer-legal">LYOS-001 is investigational and not FDA-approved. Safety and efficacy have not been established. This page is informational only and does not constitute medical advice. © 2026 Lyos Bio. All rights reserved.</span>
+    <span class="footer-ac">A sister company of <a href="https://www.americordblood.com">Americord</a></span>
+  </footer>
+
+  <script>
+    // Hero: mark as ready after mount so CSS transition kicks in, never invisible on first paint
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.hero .anim, .cta-section .anim').forEach(el => {
+        el.classList.add('ready');
+        requestAnimationFrame(() => el.classList.add('on'));
+      });
+    });
+
+    // Scroll-reveal: low threshold so content appears quickly
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }
+      }),
+      { threshold: 0.05, rootMargin: '0px 0px -20px 0px' }
+    );
+    document.querySelectorAll('.anim, .chart-panel').forEach((el) => io.observe(el));
+
+    // Nav active highlighting
+    const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+    const sections = Array.from(navLinks).map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+    const navIo = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            navLinks.forEach(a => a.classList.remove('active'));
+            const active = document.querySelector(`.nav-links a[href="#${e.target.id}"]`);
+            if (active) active.classList.add('active');
+          }
+        });
+      },
+      { threshold: 0.4 }
+    );
+    sections.forEach(s => navIo.observe(s));
+
+    function toggleFaq(btn) {
+      const faq = btn.parentElement;
+      const isOpen = faq.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen);
+    }
+  </script>
+</body>
+</html>
